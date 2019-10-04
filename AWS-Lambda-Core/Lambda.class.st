@@ -40,7 +40,7 @@ Lambda class >> start [
 	[ request := ZnEasy get: self runtime_api_next_url.
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
 	[ response := self action: request ]
-		on: Exception new
+		on: Exception
 		do: [ :e | 
 			ZnEasy
 				post: (self runtime_api_error_url: request_id)
