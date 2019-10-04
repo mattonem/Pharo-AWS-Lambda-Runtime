@@ -39,13 +39,14 @@ Lambda class >> start [
 	| request request_id response |
 	[ request := ZnEasy get: self runtime_api_next_url.
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
-	[ response := self action: request ]
+	[ response := self action: request.
+	ZnEasy
+		post: (self runtime_api_reponse_url: request_id)
+		data: (ZnEntity json: response) ]
 		on: Exception
 		do: [ :e | 
 			ZnEasy
 				post: (self runtime_api_error_url: request_id)
-				data: (ZnEntity json: '{"error_message": "' , e messageText , '"}') ].
-	ZnEasy
-		post: (self runtime_api_reponse_url: request_id)
-		data: (ZnEntity json: response) ] repeat
+				data: (ZnEntity json: '{"error_message": "' , e messageText , '"}') ] ]
+		repeat
 ]
