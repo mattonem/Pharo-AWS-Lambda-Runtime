@@ -5,15 +5,23 @@ Class {
 }
 
 { #category : #accessing }
+Lambda class >> action: aRequest [
+	^  aRequest contents
+]
+
+{ #category : #accessing }
 Lambda class >> bootstrap: className [
 	| w |
-	w := WriteStream on: (String new: 50).
+	w := WriteStream on: (String new: 100).
 	w
 		<< '#!/bin/sh';
-		cr;
+		lf;
+		<< 'cd $LAMBDA_TASK_ROOT';
+		lf;
 		<< './pharo Pharo.image --no-default-preferences eval ';
 		<< className;
-		<< ' start'.
+		<< ' start';
+		lf.
 	^ w contents
 ]
 
@@ -50,21 +58,21 @@ Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 	self createBootstrapInto: workingDir lambda: lambda.
 	OSSUnixSubprocess new
 		shellCommand:
-			'zip -r function.zip *.image *.changes *.sources pharo pharo-vm bootstrap';
+			'zip -r function.zip ./*';
 		workingDirectory: workingDir absolutePath fullName;
 		runAndWait
 ]
 
 { #category : #accessing }
 Lambda class >> createBootstrapInto: workingDir lambda: lambda [
+	(workingDir / 'bootstrap') ensureCreateFile.
 	(workingDir / 'bootstrap')
-		writeStreamDo: [ :w | w << (self bootstrap: lambda) ];
-		close.
+		writeStreamDo: [ :w | w << (self bootstrap: lambda). w close ].
 	OSSUnixSubprocess new
 		shellCommand: 'chmod +x bootstrap';
 		workingDirectory: workingDir absolutePath fullName;
 		runAndWait.
-	workingDir / 'bootstrap'
+	(workingDir / 'bootstrap') 
 ]
 
 { #category : #accessing }
@@ -106,12 +114,14 @@ Lambda class >> runtime_api_url [
 ]
 
 { #category : #accessing }
-Lambda class >> start [ 
-	| request request_id |
+Lambda class >> start [
+	| request request_id response |
 	[ request := ZnEasy get: self runtime_api_next_url.
-		request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
-		ZnEasy post: (self runtime_api_reponse_url: request_id) data:(ZnEntity json: '{"hello W"}') ]
-	repeat.
+	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
+	response := self action: request.
+	ZnEasy
+		post: (self runtime_api_reponse_url: request_id)
+		data: (ZnEntity json: response) ] repeat
 ]
 
 { #category : #accessing }
