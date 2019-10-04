@@ -15,6 +15,11 @@ Lambda class >> runtime_api [
 ]
 
 { #category : #accessing }
+Lambda class >> runtime_api_error_url: anId [
+	^ self runtime_api_url , anId, '/error'
+]
+
+{ #category : #accessing }
 Lambda class >> runtime_api_next_url [
 	^ self runtime_api_url , 'next'
 ]
@@ -34,7 +39,12 @@ Lambda class >> start [
 	| request request_id response |
 	[ request := ZnEasy get: self runtime_api_next_url.
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
-	response := self action: request.
+	[ response := self action: request ]
+		on: Exception new
+		do: [ :e | 
+			ZnEasy
+				post: (self runtime_api_error_url: request_id)
+				data: (ZnEntity json: '{"error_message": "' , e messageText , '"}') ].
 	ZnEasy
 		post: (self runtime_api_reponse_url: request_id)
 		data: (ZnEntity json: response) ] repeat
