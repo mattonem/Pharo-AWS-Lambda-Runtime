@@ -57,8 +57,14 @@ Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 
 { #category : #accessing }
 Lambda class >> createBootstrapInto: workingDir lambda: lambda [
+	(workingDir / 'bootstrap')
+		writeStreamDo: [ :w | w << (self bootstrap: lambda) ];
+		close.
+	OSSUnixSubprocess new
+		shellCommand: 'chmod +x bootstrap';
+		workingDirectory: workingDir absolutePath fullName;
+		runAndWait.
 	workingDir / 'bootstrap'
-		writeStreamDo: [ :w | w << (self bootstrap: lambda) ]
 ]
 
 { #category : #accessing }
