@@ -93,7 +93,7 @@ Lambda class >> start [
 		do: [ :e | self sendInitError: e ].
 	[ [ request := self getNextRequest.
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
-	"Stdio stderr << 'request_id: ' << request_id asString ;lf."
+	Stdio stderr << 'request_id: ' << request_id asString ;lf.
 	response := self action: request.
 	self postResponse: response id: request_id ]
 		on: Exception
