@@ -3,16 +3,13 @@ Extension { #name : #Lambda }
 { #category : #'*AWS-Lambda-Build' }
 Lambda class >> bootstrap: className [
 	| w |
-	w := WriteStream on: (String new: 100).
+	w := WriteStream on: (String new: 50).
 	w
 		<< '#!/bin/sh';
-		lf;
-		<< 'cd $LAMBDA_TASK_ROOT';
-		lf;
+		cr;
 		<< './pharo Pharo.image --no-default-preferences eval ';
 		<< className;
-		<< ' start';
-		lf.
+		<< ' start'.
 	^ w contents
 ]
 
@@ -41,6 +38,20 @@ Lambda class >> build [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
+Lambda class >> buildRepo: url baseline: baseline group: groupToLoad lambdaClass: lambda [
+	| workingDir |
+	workingDir := self createWorkingDir.
+	self zeroConfPharoInto: workingDir.
+	self installProject: baseline group: groupToLoad from: url workingDir: workingDir.
+	self createBootstrapInto: workingDir lambda: lambda.
+	OSSUnixSubprocess new
+		shellCommand:
+			'zip -r function.zip *.image *.changes *.sources pharo pharo-vm bootstrap';
+		workingDirectory: workingDir absolutePath fullName;
+		runAndWait
+]
+
+{ #category : #'*AWS-Lambda-Build' }
 Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 	| workingDir |
 	workingDir := self createWorkingDir.
@@ -49,21 +60,15 @@ Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 	self createBootstrapInto: workingDir lambda: lambda.
 	OSSUnixSubprocess new
 		shellCommand:
-			'zip -r function.zip ./*';
+			'zip -r function.zip *.image *.changes *.sources pharo pharo-vm bootstrap';
 		workingDirectory: workingDir absolutePath fullName;
 		runAndWait
 ]
 
 { #category : #'*AWS-Lambda-Build' }
 Lambda class >> createBootstrapInto: workingDir lambda: lambda [
-	(workingDir / 'bootstrap') ensureCreateFile.
-	(workingDir / 'bootstrap')
-		writeStreamDo: [ :w | w << (self bootstrap: lambda). w close ].
-	OSSUnixSubprocess new
-		shellCommand: 'chmod +x bootstrap';
-		workingDirectory: workingDir absolutePath fullName;
-		runAndWait.
-	(workingDir / 'bootstrap') 
+	workingDir / 'bootstrap'
+		writeStreamDo: [ :w | w << (self bootstrap: lambda) ]
 ]
 
 { #category : #'*AWS-Lambda-Build' }
@@ -80,6 +85,14 @@ Lambda class >> createWorkingDir [
 Lambda class >> installProject: baseline from: url workingDir: workingDir [
 	OSSUnixSubprocess new
 		shellCommand: './pharo Pharo.image metacello install ' , url , ' ' , baseline;
+		workingDirectory: workingDir absolutePath fullName;
+		runAndWait
+]
+
+{ #category : #'*AWS-Lambda-Build' }
+Lambda class >> installProject: baseline group: groupToLoad from: url workingDir: workingDir [
+	OSSUnixSubprocess new
+		shellCommand: './pharo Pharo.image metacello install ' , url , ' ' , baseline, ' --groups=', groupToLoad;
 		workingDirectory: workingDir absolutePath fullName;
 		runAndWait
 ]
