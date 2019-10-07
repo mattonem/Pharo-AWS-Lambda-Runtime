@@ -25,7 +25,7 @@ Lambda class >> getNextRequest [
 
 { #category : #accessing }
 Lambda class >> initLambda [ 	
-	Stdio stderr << 'initLambda'; lf.
+	Stdio stderr << 'Lambda >> initLambda'; lf.
 	httpClient := ZnClient new.
 
 ]
@@ -45,7 +45,7 @@ Lambda class >> runtime_api [
 
 { #category : #accessing }
 Lambda class >> runtime_api_error_url: anId [ 	
-	^ self runtime_api_url , anId, '/error'	
+	^ self runtime_api_url , anId asString, '/error'	
 
 ]
 
