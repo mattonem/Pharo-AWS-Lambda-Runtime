@@ -8,12 +8,6 @@ Class {
 }
 
 { #category : #accessing }
-Lambda class >> action: aRequest [ 
-	^  aRequest contents	
-
-]
-
-{ #category : #accessing }
 Lambda class >> getNextRequest [
 	| request |
 	request := httpClient
@@ -25,8 +19,13 @@ Lambda class >> getNextRequest [
 
 { #category : #accessing }
 Lambda class >> initLambda [ 	
-	Stdio stderr << 'Lambda >> initLambda'; lf.
 	httpClient := ZnClient new.
+
+]
+
+{ #category : #accessing }
+Lambda class >> lambdaAction: aRequest [ 
+	^  aRequest contents	
 
 ]
 
@@ -93,13 +92,10 @@ Lambda class >> start [
 		on: Exception
 		do: [ :e | self sendInitError: e ].
 	[ [ request := self getNextRequest.
-	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
-	(Stdio stderr << 'request_id: ')
-		<< request_id asString;
-		lf ]
+	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id' ]
 		on: Exception
 		do: [ :e | self sendInitError: e ].
-	[ response := self action: request.
+	[ response := self lambdaAction: request.
 	self postResponse: response id: request_id ]
 		on: Exception
 		do: [ :e | self sendError: request_id id: e ] ] repeat
