@@ -7,8 +7,6 @@ Lambda class >> bootstrap: className [
 	w
 		<< '#!/bin/sh';
 		lf;
-		<< 'cd $LAMBDA_TASK_ROOT';
-		lf;
 		<< './pharo Pharo.image --no-default-preferences eval ';
 		<< className;
 		<< ' start';

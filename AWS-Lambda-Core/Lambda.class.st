@@ -1,6 +1,9 @@
 Class {
 	#name : #Lambda,
 	#superclass : #Object,
+	#classInstVars : [
+		'httpClient'
+	],
 	#category : #'AWS-Lambda-Core'
 }
 
@@ -11,9 +14,27 @@ Lambda class >> action: aRequest [
 ]
 
 { #category : #accessing }
-Lambda class >> initLambda [ 	
-	"Do nothing. To be overwritten"	
+Lambda class >> getNextRequest [
+	| request |
+	request := httpClient
+		url: self runtime_api_next_url;
+		get;
+		response.
+	^ request
+]
 
+{ #category : #accessing }
+Lambda class >> initLambda [ 	
+	httpClient := ZnClient new.
+
+]
+
+{ #category : #accessing }
+Lambda class >> postResponse: response id: request_id [
+	^ httpClient
+		url: (self runtime_api_reponse_url: request_id);
+		entity: (ZnEntity json: response);
+		post
 ]
 
 { #category : #accessing }
@@ -49,25 +70,32 @@ Lambda class >> runtime_api_url [
 ]
 
 { #category : #accessing }
+Lambda class >> sendError: request_id id: e [
+	^ httpClient
+		url: (self runtime_api_error_url: request_id);
+		entity: (ZnEntity json: '{"error_message": "' , e messageText , '"}');
+		post
+]
+
+{ #category : #accessing }
+Lambda class >> sendInitError: e [
+	^ httpClient
+		url: self runtime_api_init_error_url;
+		entity: (ZnEntity json: '{"error_message": "' , e messageText , '"}');
+		post
+]
+
+{ #category : #accessing }
 Lambda class >> start [
 	| request request_id response |
 	[ self initLambda ]
 		on: Exception
-		do: [ :e | 
-			ZnEasy
-				post: self runtime_api_init_error_url
-				data: (ZnEntity json: '{"error_message": "' , e messageText , '"}') ].
-	request := ZnEasy get: self runtime_api_next_url.
+		do: [ :e | self sendInitError: e ].
+	request := self getNextRequest.
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
-	[ response := self action: request.
-	ZnEasy
-		post: (self runtime_api_reponse_url: request_id)
-		data: (ZnEntity json: response) ]
+	[ [ response := self action: request.
+	self postResponse: response id: request_id ]
 		on: Exception
 		do:
-			[ :e | 
-			ZnEasy
-				post: (self runtime_api_error_url: request_id)
-				data: (ZnEntity json: '{"error_message": "' , e messageText , '"}') ]
-				repeat
+			[ :e | self sendError: request_id id: e ] ] repeat
 ]
