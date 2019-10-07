@@ -6,7 +6,7 @@ Lambda class >> bootstrap: className [
 	w := WriteStream on: (String new: 50).
 	w
 		<< '#!/bin/sh';
-		cr;
+		lf;
 		<< './pharo Pharo.image --no-default-preferences eval ';
 		<< className;
 		<< ' start'.
@@ -67,8 +67,15 @@ Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 
 { #category : #'*AWS-Lambda-Build' }
 Lambda class >> createBootstrapInto: workingDir lambda: lambda [
+	workingDir
+		writeStreamDo: [ :w | 
+			w << (self bootstrap: lambda).
+			w close ].
+	OSSUnixSubprocess new
+		shellCommand: 'chmod +x bootstrap';
+		workingDirectory: workingDir absolutePath fullName;
+		runAndWait.
 	workingDir / 'bootstrap'
-		writeStreamDo: [ :w | w << (self bootstrap: lambda) ]
 ]
 
 { #category : #'*AWS-Lambda-Build' }
