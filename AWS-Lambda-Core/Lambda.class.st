@@ -90,11 +90,11 @@ Lambda class >> start [
 	| request request_id response |
 	[ self initLambda ]
 		on: Exception
-		do: [ :e | self sendInitError: e ].
+		do: [ :e | ^ self sendInitError: e ].
 	[ [ request := self getNextRequest.
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id' ]
 		on: Exception
-		do: [ :e | self sendInitError: e ].
+		do: [ :e | ^ self sendInitError: e ].
 	[ response := self lambdaAction: request.
 	self postResponse: response id: request_id ]
 		on: Exception
