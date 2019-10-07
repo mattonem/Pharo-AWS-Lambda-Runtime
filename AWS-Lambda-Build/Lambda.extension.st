@@ -3,13 +3,16 @@ Extension { #name : #Lambda }
 { #category : #'*AWS-Lambda-Build' }
 Lambda class >> bootstrap: className [
 	| w |
-	w := WriteStream on: (String new: 50).
+	w := WriteStream on: (String new: 100).
 	w
 		<< '#!/bin/sh';
 		lf;
+		<< 'cd $LAMBDA_TASK_ROOT';
+		lf;
 		<< './pharo Pharo.image --no-default-preferences eval ';
 		<< className;
-		<< ' start'.
+		<< ' start';
+		lf.
 	^ w contents
 ]
 
@@ -67,7 +70,7 @@ Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 
 { #category : #'*AWS-Lambda-Build' }
 Lambda class >> createBootstrapInto: workingDir lambda: lambda [
-	workingDir
+	workingDir / 'bootstrap'
 		writeStreamDo: [ :w | 
 			w << (self bootstrap: lambda).
 			w close ].
