@@ -25,6 +25,7 @@ Lambda class >> getNextRequest [
 
 { #category : #accessing }
 Lambda class >> initLambda [ 	
+	Stdio stderr << 'initLambda'; lf.
 	httpClient := ZnClient new.
 
 ]
