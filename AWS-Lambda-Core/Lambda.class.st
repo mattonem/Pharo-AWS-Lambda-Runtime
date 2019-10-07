@@ -10,6 +10,11 @@ Lambda class >> action: aRequest [
 ]
 
 { #category : #accessing }
+Lambda class >> initLambda [
+	"Do nothing. To be overwritten"
+]
+
+{ #category : #accessing }
 Lambda class >> runtime_api [
 	^ OSEnvironment current at: 'AWS_LAMBDA_RUNTIME_API'
 ]
@@ -17,6 +22,11 @@ Lambda class >> runtime_api [
 { #category : #accessing }
 Lambda class >> runtime_api_error_url: anId [
 	^ self runtime_api_url , anId, '/error'
+]
+
+{ #category : #accessing }
+Lambda class >> runtime_api_init_error_url [
+	^ 'http://',self runtime_api,'/2018-06-01/runtime/init/error'
 ]
 
 { #category : #accessing }
@@ -37,6 +47,12 @@ Lambda class >> runtime_api_url [
 { #category : #accessing }
 Lambda class >> start [
 	| request request_id response |
+	[ self initLambda ]
+		on: Exception
+		do: [ :e | 
+			ZnEasy
+				post: self runtime_api_init_error_url
+				data: (ZnEntity json: '{"error_message": "' , e messageText , '"}') ].
 	[ request := ZnEasy get: self runtime_api_next_url.
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id'.
 	[ response := self action: request.
