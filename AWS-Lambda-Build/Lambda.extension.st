@@ -90,6 +90,15 @@ Lambda class >> createWorkingDir [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
+Lambda class >> deployFunction: functionName fromDirectory: aWorkingDirectory [
+	aWorkingDirectory / 'function.zip'.
+		OSSUnixSubprocess new
+		shellCommand: 'aws lambda update-function-code --function-name ', functionName, ' --zip-file fileb://function.zip';
+		workingDirectory: aWorkingDirectory absolutePath fullName;
+		runAndWait
+]
+
+{ #category : #'*AWS-Lambda-Build' }
 Lambda class >> installProject: baseline from: url workingDir: workingDir [
 	OSSUnixSubprocess new
 		shellCommand: './pharo Pharo.image metacello install ' , url , ' ' , baseline;
