@@ -43,13 +43,18 @@ Lambda class >> buildRepo: url baseline: baseline group: groupToLoad lambdaClass
 	| workingDir |
 	workingDir := self createWorkingDir.
 	self zeroConfPharoInto: workingDir.
-	self installProject: baseline group: groupToLoad from: url workingDir: workingDir.
+	self
+		installProject: baseline
+		group: groupToLoad
+		from: url
+		workingDir: workingDir.
 	self createBootstrapInto: workingDir lambda: lambda.
 	OSSUnixSubprocess new
 		shellCommand:
 			'zip -r function.zip *.image *.changes *.sources pharo pharo-vm bootstrap';
 		workingDirectory: workingDir absolutePath fullName;
-		runAndWait
+		runAndWait.
+	^ workingDir
 ]
 
 { #category : #'*AWS-Lambda-Build' }
@@ -64,6 +69,12 @@ Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 			'zip -r function.zip *.image *.changes *.sources pharo pharo-vm bootstrap';
 		workingDirectory: workingDir absolutePath fullName;
 		runAndWait
+]
+
+{ #category : #'*AWS-Lambda-Build' }
+Lambda class >> cleanBuilds [
+	(FileSystem workingDirectory / 'build') exists
+		ifTrue: [ (FileSystem workingDirectory / 'build') deleteAll ]
 ]
 
 { #category : #'*AWS-Lambda-Build' }
@@ -82,7 +93,7 @@ Lambda class >> createBootstrapInto: workingDir lambda: lambda [
 { #category : #'*AWS-Lambda-Build' }
 Lambda class >> createWorkingDir [
 	| workingDir |
-	workingDir := FileSystem workingDirectory / 'build'.
+	workingDir := FileSystem workingDirectory / 'build' / UUID new asString.
 	workingDir exists
 		ifTrue: [ workingDir deleteAll ].
 	workingDir ensureCreateDirectory.
