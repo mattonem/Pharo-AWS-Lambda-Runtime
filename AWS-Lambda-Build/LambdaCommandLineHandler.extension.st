@@ -1,13 +1,13 @@
-Extension { #name : #Lambda }
+Extension { #name : #LambdaCommandLineHandler }
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> bootstrap: className [
+LambdaCommandLineHandler class >> bootstrap: className [
 	| w |
 	w := WriteStream on: (String new: 100).
 	w
 		<< '#!/bin/sh';
 		lf;
-		<< './pharo Pharo.image --no-default-preferences eval ';
+		<< './pharo Pharo.image --no-default-preferences ';
 		<< className;
 		<< ' start';
 		lf.
@@ -15,7 +15,7 @@ Lambda class >> bootstrap: className [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> build [
+LambdaCommandLineHandler class >> build [
 	| workingDir |
 	workingDir := self createWorkingDir.
 	self zeroConfPharoInto: workingDir.
@@ -39,7 +39,7 @@ Lambda class >> build [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> buildRepo: url baseline: baseline group: groupToLoad lambdaClass: lambda [
+LambdaCommandLineHandler class >> buildRepo: url baseline: baseline group: groupToLoad lambdaClass: lambda [
 	| workingDir |
 	workingDir := self createWorkingDir.
 	self zeroConfPharoInto: workingDir.
@@ -58,7 +58,7 @@ Lambda class >> buildRepo: url baseline: baseline group: groupToLoad lambdaClass
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
+LambdaCommandLineHandler class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 	| workingDir |
 	workingDir := self createWorkingDir.
 	self zeroConfPharoInto: workingDir.
@@ -72,13 +72,13 @@ Lambda class >> buildRepo: url baseline: baseline lambdaClass: lambda [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> cleanBuilds [
+LambdaCommandLineHandler class >> cleanBuilds [
 	(FileSystem workingDirectory / 'build') exists
 		ifTrue: [ (FileSystem workingDirectory / 'build') deleteAll ]
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> createBootstrapInto: workingDir lambda: lambda [
+LambdaCommandLineHandler class >> createBootstrapInto: workingDir lambda: lambda [
 	workingDir / 'bootstrap'
 		writeStreamDo: [ :w | 
 			w << (self bootstrap: lambda).
@@ -91,7 +91,7 @@ Lambda class >> createBootstrapInto: workingDir lambda: lambda [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> createWorkingDir [
+LambdaCommandLineHandler class >> createWorkingDir [
 	| workingDir |
 	workingDir := FileSystem workingDirectory / 'build' / UUID new asString.
 	workingDir exists
@@ -101,7 +101,7 @@ Lambda class >> createWorkingDir [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> deployFunction: functionName fromDirectory: aWorkingDirectory [
+LambdaCommandLineHandler class >> deployFunction: functionName fromDirectory: aWorkingDirectory [
 	aWorkingDirectory / 'function.zip'.
 		OSSUnixSubprocess new
 		shellCommand: 'aws lambda update-function-code --function-name ', functionName, ' --zip-file fileb://function.zip';
@@ -110,7 +110,7 @@ Lambda class >> deployFunction: functionName fromDirectory: aWorkingDirectory [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> installProject: baseline from: url workingDir: workingDir [
+LambdaCommandLineHandler class >> installProject: baseline from: url workingDir: workingDir [
 	OSSUnixSubprocess new
 		shellCommand: './pharo Pharo.image metacello install ' , url , ' ' , baseline;
 		workingDirectory: workingDir absolutePath fullName;
@@ -118,7 +118,7 @@ Lambda class >> installProject: baseline from: url workingDir: workingDir [
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> installProject: baseline group: groupToLoad from: url workingDir: workingDir [
+LambdaCommandLineHandler class >> installProject: baseline group: groupToLoad from: url workingDir: workingDir [
 	OSSUnixSubprocess new
 		shellCommand: './pharo Pharo.image metacello install ' , url , ' ' , baseline, ' --groups=', groupToLoad;
 		workingDirectory: workingDir absolutePath fullName;
@@ -126,7 +126,7 @@ Lambda class >> installProject: baseline group: groupToLoad from: url workingDir
 ]
 
 { #category : #'*AWS-Lambda-Build' }
-Lambda class >> zeroConfPharoInto: workingDir [
+LambdaCommandLineHandler class >> zeroConfPharoInto: workingDir [
 	OSSUnixSubprocess new
 		shellCommand: 'curl https://get.pharo.org/64/70+vm | bash';
 		workingDirectory: workingDir absolutePath fullName;
