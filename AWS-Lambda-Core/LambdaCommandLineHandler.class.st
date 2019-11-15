@@ -89,7 +89,7 @@ LambdaCommandLineHandler >> runtime_api_url [
 LambdaCommandLineHandler >> sendError: request_id id: e [
 	^ httpClient
 		url: (self runtime_api_error_url: request_id);
-		entity: (ZnEntity json: '{"error_message": "' , e messageText , '"}');
+		entity: (ZnEntity json: '{"error_message": "' , e description , '"}');
 		post
 ]
 
