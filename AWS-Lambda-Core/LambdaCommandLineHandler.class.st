@@ -17,8 +17,8 @@ LambdaCommandLineHandler >> activate [
 	request_id := request headers at: 'Lambda-Runtime-Aws-Request-Id' ]
 		on: Exception
 		do: [ :e | ^ self sendInitError: e ].
-	[ response := self lambdaAction: request.
-	self postResponse: response id: request_id ]
+	[ response := self lambdaAction: (NeoJSONReader fromString: request).
+	self postResponse: (NeoJSONWriter toString: response) id: request_id ]
 		on: Exception
 		do: [ :e | self sendError: request_id id: e ] ] repeat
 ]

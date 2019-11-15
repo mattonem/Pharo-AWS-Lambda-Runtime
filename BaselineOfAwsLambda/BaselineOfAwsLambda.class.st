@@ -15,7 +15,12 @@ BaselineOfAwsLambda >> baseline: spec [
 						repository: 'github://pharo-contributions/OSSubprocess:master/repository';
 						loads: #default ].
 			spec
-				package: 'AWS-Lambda-Core';
+				baseline: 'NeoJSON'
+				with: [ spec
+						repository: 'github://svenvc/NeoJSON/repository';
+						loads: #core ].
+			spec
+				package: 'AWS-Lambda-Core' with: [ spec requires: #(NeoJSON) ];
 				package: 'AWS-Lambda-Build'
 					with: [ spec requires: #('AWS-Lambda-Core' 'OSSubprocess') ];
 				group: 'default' with: #('core' 'build');
