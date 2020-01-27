@@ -41,7 +41,7 @@ LambdaCommandLineHandler >> initLambda [
 
 { #category : #accessing }
 LambdaCommandLineHandler >> lambdaAction: aRequest [ 
-	^  aRequest contents	
+	^  aRequest 	
 
 ]
 
